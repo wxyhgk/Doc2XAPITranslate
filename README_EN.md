@@ -19,6 +19,9 @@ Supports multiple translators and multi-threaded translation:
 
 If you wish to use LLM for translation, there are additional settings to aid in the translation process.
 
+> [!TIP]
+> When using DeepSeek, you can customize the service endpoint and model through the `deepseek_baseurl` (defaults to `https://api.deepseek.com/v1`) and `deepseek_model` entries in your `.env` file.
+
 **### Text Extraction Method for Translation**
 
 Due to the uncertainty of LLM output, three methods are built-in for extracting translated text: `json`, `markdown`, and `direct`. The preset prompt output requires using the `markdown` method for extraction.

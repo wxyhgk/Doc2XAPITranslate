@@ -6,7 +6,8 @@ def deepseek_translate(
     api_key: str,
     src: str = "English",
     dest: str = "中文",
-    model="deepseek-chat",
+    model: str = "deepseek-chat",
+    base_url: str = "https://api.deepseek.com/v1",
     tempterature=0.8,
     system_prompt: str = None,
     input_prompt: str = None,
@@ -75,7 +76,7 @@ Please proceed with your analysis and translation.
         
         while retry_count <= max_retries:
             try:
-                client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+                client = OpenAI(api_key=api_key, base_url=base_url)
                 response = client.chat.completions.create(
                     model=model,
                     messages=[

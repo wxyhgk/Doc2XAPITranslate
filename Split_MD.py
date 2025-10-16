@@ -16,6 +16,7 @@ class Block:
 def split_markdown(content: str) -> List[Block]:
     A = []
     pattern = re.compile(
+        r"(?P<code>```[\s\S]*?```)|"
         r"(?P<title>^#{1,6} .+?$)|"
         r"(?P<table><table[\s\S]*?<\/table>)|"
         r"(?P<block_formula>\$\$[\s\S]+?\$\$)|"
@@ -47,6 +48,10 @@ def split_markdown(content: str) -> List[Block]:
                     type="block_formula",
                     content=match.group("block_formula"),
                 )
+            )
+        elif match.group("code"):
+            A.append(
+                Block(position=len(A) + 1, type="code", content=match.group("code"))
             )
         elif match.group("img"):
             A.append(
@@ -105,35 +110,36 @@ def split_text_blocks(A: List[Block]) -> List[Block]:
     return new_blocks
 
 
-def replace_inline_formula(
-    text: str, placeholder_counter: int, placeholders: dict
-) -> str:
+def replace_inline_formula(text: str):
     inline_formula_pattern = re.compile(r"\$[^$]+\$")
 
+    placeholders = {}
+    counter = {"value": 1}
+
     def replacer(match):
-        nonlocal placeholder_counter
-        placeholder = f"⚛️{placeholder_counter}⚛️"
+        placeholder = f"⚛️{counter['value']}⚛️"
         placeholders[placeholder] = match.group()
-        placeholder_counter += 1
+        counter["value"] += 1
         return placeholder
 
-    return inline_formula_pattern.sub(replacer, text)
+    replaced = inline_formula_pattern.sub(replacer, text)
+    return replaced, placeholders
 
 
 def concurrent_translate(
     A: List[Block], translate: callable, thread: int
 ) -> List[Block]:
-    placeholders = {}
-    placeholder_counter = 1
-
     def process_block(block: Block):
-        nonlocal placeholder_counter
-        if block.type in ["table", "block_formula", "image", "link_image", "link"]:
+        if block.type in ["table", "block_formula", "image", "link_image", "link", "code"]:
             return block
         elif block.type == "title":
-            content = block.content.lstrip("#").strip()
-            translated = translate(content, "", "")
-            block.content = translated
+            match = re.match(r"^(#{1,6})(\s+)(.*)", block.content)
+            if match:
+                hashes, whitespace, content = match.groups()
+            else:
+                hashes, whitespace, content = "#", " ", block.content.lstrip("#").strip()
+            translated = translate(content, "", "").strip()
+            block.content = f"{hashes}{whitespace}{translated}"
             return block
         elif block.type == "text":
             prev_block = None
@@ -161,10 +167,7 @@ def concurrent_translate(
                 elif b.position == block.position + 1:
                     next_block = b.content
                     break
-            translated_content = replace_inline_formula(
-                block.content, placeholder_counter, placeholders
-            )
-            placeholder_counter += len(placeholders)
+            translated_content, placeholders = replace_inline_formula(block.content)
             translated = translate(
                 translated_content, prev_block or "", next_block or ""
             )
@@ -172,7 +175,7 @@ def concurrent_translate(
                 # Remove spaces between $ and formula content
                 formula = re.sub(r"\$\s*(.*?)\s*\$", r"$\1$", formula)
                 translated = translated.replace(placeholder, f" {formula} ")
-            if "⚛️" in translated:
+            if any(placeholder in translated for placeholder in placeholders):
                 sentences = re.split(r"(?<=[。？！.!?;；])", block.content)
                 translated_sentences = [translate(s, "", "") for s in sentences]
                 translated = "".join(translated_sentences)
@@ -195,7 +198,14 @@ def concurrent_translate(
 
 def combine_blocks(A: List[Block]) -> str:
     combined = []
-    special_types = ["table", "block_formula", "image", "link_image", "link"]
+    special_types = [
+        "table",
+        "block_formula",
+        "image",
+        "link_image",
+        "link",
+        "code",
+    ]
     for i, block in enumerate(A):
         # Add newline before special blocks
         if block.type in special_types and (

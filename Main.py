@@ -25,6 +25,8 @@ ollama_baseurl = os.getenv("ollama_baseurl", "http://localhost:11434/v1")
 ollama_model = os.getenv("ollama_model", "qwen2.5")
 
 deepseek_api = os.getenv("deepseek_api")
+deepseek_baseurl = os.getenv("deepseek_baseurl", "https://api.deepseek.com/v1")
+deepseek_model = os.getenv("deepseek_model", "deepseek-chat")
 
 deeplx_url = os.getenv("deeplx_url", "http://127.0.0.1:1188/translate")
 deeplx_src = os.getenv("deeplx_src", "EN")
@@ -89,6 +91,8 @@ def create_translator(name):
     ollama_model = os.getenv("ollama_model", "qwen2.5")
 
     deepseek_api = os.getenv("deepseek_api")
+    deepseek_baseurl = os.getenv("deepseek_baseurl", "https://api.deepseek.com/v1")
+    deepseek_model = os.getenv("deepseek_model", "deepseek-chat")
 
     deeplx_url = os.getenv("deeplx_url", "http://127.0.0.1:1188/translate")
     deeplx_src = os.getenv("deeplx_src", "EN")
@@ -142,6 +146,8 @@ def create_translator(name):
             api_key=deepseek_api,
             src=llm_src,
             dest=llm_dest,
+            model=deepseek_model,
+            base_url=deepseek_baseurl,
             tempterature=temperature,
             system_prompt=system_prompt if system_prompt else None,
             input_prompt=input_prompt if input_prompt else None,

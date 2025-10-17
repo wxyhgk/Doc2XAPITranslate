@@ -25,6 +25,9 @@
 
 如您想使用LLM进行翻译，有额外的一些设定以辅助进行翻译。
 
+> [!TIP]
+> 使用 DeepSeek 时，可通过 `.env` 中的 `deepseek_baseurl`（默认 `https://api.deepseek.com/v1`）和 `deepseek_model` 参数来自定义服务地址与模型名称。
+
 ### 翻译文本提取方式
 由于LLM的输出不确定性，内置有三种方式进行翻译文本的提取：`json`、`markdown`和`direct`。预设提示词输出方式需要使用`markdown`方式进行提取。
 
